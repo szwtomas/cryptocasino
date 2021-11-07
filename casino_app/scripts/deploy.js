@@ -22,6 +22,7 @@ async function main() {
   const CryptoChip = await hre.ethers.getContractFactory("CryptoChip");
   const cryptoChip = await CryptoChip.deploy("CryptoChip", "CCP", 1000);
   await cryptoChip.deployed();
+
   console.log("CryptoChip deployed to:", cryptoChip.address);
 }
 

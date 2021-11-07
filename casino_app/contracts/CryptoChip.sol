@@ -7,46 +7,46 @@ import "./IERC20Metadata.sol";
 import "./Ownable.sol";
 
 // interface Aion
-contract Aion {
-    uint256 public serviceFee;
-    function ScheduleCall(uint256 blocknumber, address to, uint256 value, uint256 gaslimit, uint256 gasprice, bytes data, bool schedType) public payable returns (uint,address);
-
+abstract contract Aion {
+  uint256 public serviceFee;
+  function ScheduleCall(uint256 blocknumber, address to, uint256 value, uint256 gaslimit, uint256 gasprice, bytes memory data, bool schedType) public virtual payable returns (uint,address);
 }
 
 
 //ver bien si necesitamos heredar de Context
 contract CryptoChip is IERC20, IERC20Metadata, Ownable{
   mapping(address => uint256) private _chipCount;
-  mapping(address => mapping(address => uint256)) private _allowances;
 
   uint256 private _totalSupply;
 
   string private _name;
   string private _symbol;
-  address private _casinoAdress;
+  address private _casinoAddress;
   Aion aion;
 
-  constructor(string memory name_, string memory symbol_, uint256 initialSupply_) {
+  constructor(string memory name_, string memory symbol_, uint256 initialSupply_, address casinoAddress_) {
     _name = name_;
     _symbol = symbol_;
     _totalSupply = initialSupply_;
-    scheduleDailyMint();
+    _casinoAddress = casinoAddress_;
+    _chipCount[_casinoAddress] = _totalSupply;
+    //scheduleDailyMint();
   }
 
   function scheduleDailyMint() internal {
     aion = Aion(0xFcFB45679539667f7ed55FA59A15c8Cad73d9a4E); //ropsten address - verify if works 
     bytes memory data = abi.encodeWithSelector(bytes4(keccak256('dailyMint()')));
     uint callCost = 200000*1e9 + aion.serviceFee();
-    aion.ScheduleCall.value(callCost)( block.timestamp + 1 days, address(this), 0, 200000, 1e9, data, true);
+    aion.ScheduleCall{value:callCost}( block.timestamp + 1 days, address(this), 0, 200000, 1e9, data, true);
   }
 
   function dailyMint() internal {
-    _mint(_casinoAdress, 100);
+    _mint(_casinoAddress, 100);
     scheduleDailyMint();
   }
 
   function setCasinoAddress(address casinoAdress) public onlyOwner{
-    _casinoAdress = casinoAdress;
+    _casinoAddress = casinoAdress;
   }
 
   function name() public view virtual override returns (string memory) {
@@ -66,22 +66,21 @@ contract CryptoChip is IERC20, IERC20Metadata, Ownable{
   }
 
   function balanceOf(address account) public view virtual override returns (uint256) {
-        return _chipCount[account];
+    return _chipCount[account];
   }
 
-    function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
-      _transfer(msg.sender, recipient, amount);
-      return true;
+  function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
+    _transfer(msg.sender, recipient, amount);
+    return true;
   }
 
   function allowance(address owner, address spender) public view virtual override returns (uint256) {
-      return _allowances[owner][spender];
+    return spender == _casinoAddress ? _chipCount[owner] : 0;
   }
 
   
   function approve(address spender, uint256 amount) public virtual override returns (bool) {
-      _approve(msg.sender, spender, amount);
-      return true;
+    return false;
   }
 
   /**
@@ -98,19 +97,13 @@ contract CryptoChip is IERC20, IERC20Metadata, Ownable{
     * `amount`.
     */
   function transferFrom(
-      address sender,
-      address recipient,
-      uint256 amount
+    address sender,
+    address recipient,
+    uint256 amount
   ) public virtual override returns (bool) {
-      _transfer(sender, recipient, amount);
-
-      uint256 currentAllowance = _allowances[sender][msg.sender];
-      require(currentAllowance >= amount, "ERC20: transfer amount exceeds allowance");
-      unchecked {
-          _approve(sender, msg.sender, currentAllowance - amount);
-      }
-
-      return true;
+    require(recipient == _casinoAddress, "ERC20: you are not the casino");
+    _transfer(sender, recipient, amount);
+    return true;
   }
 
   /**
@@ -126,8 +119,7 @@ contract CryptoChip is IERC20, IERC20Metadata, Ownable{
     * - `spender` cannot be the zero address.
     */
   function increaseAllowance(address spender, uint256 addedValue) public virtual returns (bool) {
-      _approve(msg.sender, spender, _allowances[msg.sender][spender] + addedValue);
-      return true;
+    return false;
   }
 
   /**
@@ -145,32 +137,26 @@ contract CryptoChip is IERC20, IERC20Metadata, Ownable{
     * `subtractedValue`.
     */
   function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {
-      uint256 currentAllowance = _allowances[msg.sender][spender];
-      require(currentAllowance >= subtractedValue, "ERC20: decreased allowance below zero");
-      unchecked {
-          _approve(msg.sender, spender, currentAllowance - subtractedValue);
-      }
-
-      return true;
+    return false;
   }
 
   function _transfer(
-      address sender,
-      address recipient,
-      uint256 amount
+    address sender,
+    address recipient,
+    uint256 amount
   ) internal virtual {
-      require(sender != address(0), "ERC20: transfer from the zero address");
-      require(recipient != address(0), "ERC20: transfer to the zero address");
+    require(sender != address(0), "ERC20: transfer from the zero address");
+    require(recipient != address(0), "ERC20: transfer to the zero address");
 
 
-      uint256 senderBalance = _chipCount[sender];
-      require(senderBalance >= amount, "ERC20: transfer amount exceeds balance");
-      unchecked {
-          _chipCount[sender] = senderBalance - amount;
-      }
-      _chipCount[recipient] += amount;
+    uint256 senderBalance = _chipCount[sender];
+    require(senderBalance >= amount, "ERC20: transfer amount exceeds balance");
+    unchecked {
+        _chipCount[sender] = senderBalance - amount;
+    }
+    _chipCount[recipient] += amount;
 
-      emit Transfer(sender, recipient, amount);
+    emit Transfer(sender, recipient, amount);
   }
 
   /** @dev Creates `amount` tokens and assigns them to `account`, increasing
@@ -183,10 +169,10 @@ contract CryptoChip is IERC20, IERC20Metadata, Ownable{
     * - `account` cannot be the zero address.
     */
   function _mint(address account, uint256 amount) internal virtual {
-      require(account != address(0), "ERC20: mint to the zero address");
-      _totalSupply += amount;
-      _chipCount[account] += amount;
-      emit Transfer(address(0), account, amount);
+    require(account != address(0), "ERC20: mint to the zero address");
+    _totalSupply += amount;
+    _chipCount[account] += amount;
+    emit Transfer(address(0), account, amount);
   }
 
   /**
@@ -201,41 +187,16 @@ contract CryptoChip is IERC20, IERC20Metadata, Ownable{
     * - `account` must have at least `amount` tokens.
     */
   function _burn(address account, uint256 amount) internal virtual {
-      require(account != address(0), "ERC20: burn from the zero address");
+    require(account != address(0), "ERC20: burn from the zero address");
 
-      uint256 accountBalance = _chipCount[account];
-      require(accountBalance >= amount, "ERC20: burn amount exceeds balance");
-      unchecked {
-          _chipCount[account] = accountBalance - amount;
-      }
-      _totalSupply -= amount;
+    uint256 accountBalance = _chipCount[account];
+    require(accountBalance >= amount, "ERC20: burn amount exceeds balance");
+    unchecked {
+        _chipCount[account] = accountBalance - amount;
+    }
+    _totalSupply -= amount;
 
-      emit Transfer(account, address(0), amount);
-  }
-
-  /**
-    * @dev Sets `amount` as the allowance of `spender` over the `owner` s tokens.
-    *
-    * This internal function is equivalent to `approve`, and can be used to
-    * e.g. set automatic allowances for certain subsystems, etc.
-    *
-    * Emits an {Approval} event.
-    *
-    * Requirements:
-    *
-    * - `owner` cannot be the zero address.
-    * - `spender` cannot be the zero address.
-    */
-  function _approve(
-      address owner,
-      address spender,
-      uint256 amount
-  ) internal virtual {
-      require(owner != address(0), "ERC20: approve from the zero address");
-      require(spender != address(0), "ERC20: approve to the zero address");
-
-      _allowances[owner][spender] = amount;
-      emit Approval(owner, spender, amount);
+    emit Transfer(account, address(0), amount);
   }
 
 }
