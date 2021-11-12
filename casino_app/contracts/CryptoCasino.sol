@@ -1,10 +1,11 @@
 pragma solidity ^0.8.0;
 
+import "./Randomizable.sol";
 import "./Ownable.sol";
 import "./CryptoChip.sol";
 import "./IERC20.sol";
 
-contract CryptoCasino is Ownable {
+contract CryptoCasino is Ownable, Randomizable {
 
     IERC20 chipContract;
 
@@ -38,5 +39,7 @@ contract CryptoCasino is Ownable {
     function setChipContractAddress(address _address) external onlyOwner {
         chipContract = IERC20(_address);
     }
+
+    
 
 }

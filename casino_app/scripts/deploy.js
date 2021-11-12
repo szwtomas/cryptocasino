@@ -19,8 +19,12 @@ async function main() {
   await greeter.deployed();
   console.log("Greeter deployed to:", greeter.address);
 
+  const CryptoCasino = await hre.ethers.getContractFactory("CryptoCasino");
+  const cc = await CryptoCasino.deploy();
+  await cc.deployed();
+  
   const CryptoChip = await hre.ethers.getContractFactory("CryptoChip");
-  const cryptoChip = await CryptoChip.deploy("CryptoChip", "CCP", 1000);
+  const cryptoChip = await CryptoChip.deploy("CryptoChip", "CCP", 1000, cc.address);
   await cryptoChip.deployed();
 
   console.log("CryptoChip deployed to:", cryptoChip.address);
