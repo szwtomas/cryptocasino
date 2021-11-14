@@ -8,9 +8,13 @@ import "./IERC20.sol";
 contract CryptoCasino is Ownable, Randomizable {
 
     IERC20 chipContract;
+    
 
     event Bought(uint256 amount);
     event Sold(uint256 amount);
+
+    constructor (address _oracleAddress) Randomizable(_oracleAddress){
+    }
 
     function buy() payable public {
         uint256 amountToBuy = msg.value;

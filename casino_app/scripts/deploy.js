@@ -19,15 +19,26 @@ async function main() {
   await greeter.deployed();
   console.log("Greeter deployed to:", greeter.address);
 
+  const RandomnessOracle = await hre.ethers.getContractFactory("RandomnessOracle");
+  const rO = await RandomnessOracle.deploy();
+  await rO.deployed();
+
   const CryptoCasino = await hre.ethers.getContractFactory("CryptoCasino");
-  const cc = await CryptoCasino.deploy();
+  const cc = await CryptoCasino.deploy(rO.address);
   await cc.deployed();
+  
+  console.log("CryptoCasino deployed to:", cc.address);
   
   const CryptoChip = await hre.ethers.getContractFactory("CryptoChip");
   const cryptoChip = await CryptoChip.deploy("CryptoChip", "CCP", 1000, cc.address);
   await cryptoChip.deployed();
-
+  
   console.log("CryptoChip deployed to:", cryptoChip.address);
+  
+  
+
+  console.log("RandomnessOracle deployed to:", rO.address);
+
 }
 
 // We recommend this pattern to be able to use async/await everywhere
