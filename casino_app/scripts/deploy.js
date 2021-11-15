@@ -22,20 +22,25 @@ async function main() {
   const RandomnessOracle = await hre.ethers.getContractFactory("RandomnessOracle");
   const rO = await RandomnessOracle.deploy();
   await rO.deployed();
-
+/*
   const CryptoCasino = await hre.ethers.getContractFactory("CryptoCasino");
   const cc = await CryptoCasino.deploy(rO.address);
   await cc.deployed();
+  */
+  const CryptoCraps = await hre.ethers.getContractFactory("CryptoCraps");
+  const ccr = await CryptoCraps.deploy(rO.address);
+  await ccr.deployed();
   
-  console.log("CryptoCasino deployed to:", cc.address);
+
+  console.log("CryptoCasino deployed to:", ccr.address);
   
   const CryptoChip = await hre.ethers.getContractFactory("CryptoChip");
-  const cryptoChip = await CryptoChip.deploy("CryptoChip", "CCP", 1000, cc.address);
+  const cryptoChip = await CryptoChip.deploy("CryptoChip", "CCP", 1000, ccr.address);
   await cryptoChip.deployed();
   
   console.log("CryptoChip deployed to:", cryptoChip.address);
   
-  
+  await ccr.setChipContractAddress(cryptoChip.address);
 
   console.log("RandomnessOracle deployed to:", rO.address);
 

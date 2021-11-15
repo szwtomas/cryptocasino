@@ -18,7 +18,7 @@ contract Randomizable is Ownable {
     
     RandomnessOracleInterface private oracleInstance;
     address private oracleAddress;
-    uint256 private randomNumber;
+    uint256 internal randomNumber;
     mapping(uint256=>bool) myRequests;
     event newOracleAddressEvent(address oracleAddress);
     event ReceivedNewRequestIdEvent(uint256 id);
@@ -38,6 +38,7 @@ contract Randomizable is Ownable {
     }
 
     function callback(uint256 _randomNumber, uint256 _id) public onlyOracle {
+        //TODO ver lo del error de la pending list
         //require(myRequests[_id], "This request is not in my pending list.");
         randomNumber = _randomNumber;
         //delete myRequests[_id];

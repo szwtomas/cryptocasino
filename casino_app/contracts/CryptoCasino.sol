@@ -7,8 +7,7 @@ import "./IERC20.sol";
 
 contract CryptoCasino is Ownable, Randomizable {
 
-    IERC20 chipContract;
-    
+    IERC20 internal chipContract;
 
     event Bought(uint256 amount);
     event Sold(uint256 amount);
@@ -44,6 +43,11 @@ contract CryptoCasino is Ownable, Randomizable {
         chipContract = IERC20(_address);
     }
 
-    
+    modifier onlyValidFunds(uint256 amount) {
+        require(amount > 0, "You need to bet at least one chip");
+        uint playerChips = chipContract.balanceOf(msg.sender);
+        require(amount <= playerChips, "Not enough funds to bet that amount"); 
+        _;
+    }
 
 }
