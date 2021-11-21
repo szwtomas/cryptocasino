@@ -9,7 +9,6 @@ The app is a simple casino Dapp compatible with Ethereum blockchain
 Inside the casino_app directory:
 
 - run ```npm i``` (note: you need a recent node version installed)
-- run ```npx hardhat compile``` to compile the contracts
 - run ```npx hardhat node``` to spin up the local blockhain for development
 
 <br/>In another terminal 

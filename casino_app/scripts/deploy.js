@@ -14,35 +14,19 @@ async function main() {
   // await hre.run('compile');
 
   // We get the contract to deploy
-  const Greeter = await hre.ethers.getContractFactory("Greeter");
-  const greeter = await Greeter.deploy("Hello, Hardhat!");
-  await greeter.deployed();
-  console.log("Greeter deployed to:", greeter.address);
 
+  await hre.run('compile');
   const RandomnessOracle = await hre.ethers.getContractFactory("RandomnessOracle");
   const rO = await RandomnessOracle.deploy();
   await rO.deployed();
-/*
-  const CryptoCasino = await hre.ethers.getContractFactory("CryptoCasino");
-  const cc = await CryptoCasino.deploy(rO.address);
-  await cc.deployed();
-  */
+
+  const Randomizable = await hre.ethers.getContractFactory("Randomizable");
+  const r = await Randomizable.deploy(rO.address);
+  await r.deployed();
+
   const CryptoCraps = await hre.ethers.getContractFactory("CryptoCraps");
-  const ccr = await CryptoCraps.deploy(rO.address);
+  const ccr = await CryptoCraps.deploy(r.address);
   await ccr.deployed();
-  
-
-  console.log("CryptoCasino deployed to:", ccr.address);
-  
-  const CryptoChip = await hre.ethers.getContractFactory("CryptoChip");
-  const cryptoChip = await CryptoChip.deploy("CryptoChip", "CCP", 1000, ccr.address);
-  await cryptoChip.deployed();
-  
-  console.log("CryptoChip deployed to:", cryptoChip.address);
-  
-  await ccr.setChipContractAddress(cryptoChip.address);
-
-  console.log("RandomnessOracle deployed to:", rO.address);
 
 }
 
