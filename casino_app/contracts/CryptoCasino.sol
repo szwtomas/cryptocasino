@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.0;
 
 import "./Randomizable.sol";
@@ -5,17 +7,21 @@ import "./Ownable.sol";
 import "./CryptoChip.sol";
 import "./IERC20.sol";
 
-contract CryptoCasino is Ownable, Randomizable {
+//crypto casino game tal vez es un mejor nombre
+contract CryptoCasino is Ownable {
 
     IERC20 internal chipContract;
+    RandomizableInterface internal randomProviderContract; 
 
     event Bought(uint256 amount);
     event Sold(uint256 amount);
 
-    constructor (address _oracleAddress) Randomizable(_oracleAddress){
+    constructor  (address _randomizableContract) {
+        chipContract = new CryptoChip("Crypto Chip", "CHIP", 1000, address(this));
+        randomProviderContract = RandomizableInterface(_randomizableContract);
     }
 
-    function buy() payable public {
+    function buy() public payable {
         uint256 amountToBuy = msg.value;
         //uint256 resto = amountToBuy % 10000000000000000;
         amountToBuy = amountToBuy / 10000000000000000; //0,01
@@ -31,7 +37,7 @@ contract CryptoCasino is Ownable, Randomizable {
         uint256 allowance = chipContract.allowance(msg.sender, address(this));
         require(allowance >= amount, "Not enough tokens");
         chipContract.transferFrom(msg.sender, address(this), amount);
-        payable(msg.sender).transfer(amount);
+        payable(msg.sender).transfer(amount * 10000000000000000);
         emit Sold(amount);
     }
 

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.0;
 
 import "./Randomizable.sol";
@@ -23,14 +25,12 @@ contract RandomnessOracle is Ownable {
     emit SetRandomNumber(_randomNumber, _callerAddress);
   }
 
-  function getRandomNumber() public returns (uint256) {
-    randNonce++;
-    uint id = uint(keccak256(abi.encodePacked(block.timestamp, msg.sender, randNonce))) % modulus;
-    pendingRequests[id] = true;
-    emit GetRandomNumber(msg.sender, id);
-    uint randomnum = uint(keccak256(abi.encodePacked(block.timestamp, msg.sender, randNonce))) % 6 + 1;
-    setRandomNumber(randomnum, msg.sender, id);
-    return id;
+  function getRandomNumber(uint256 _reqId) public returns (uint256) {
+    pendingRequests[_reqId] = true;
+    emit GetRandomNumber(msg.sender, _reqId);
+    uint randomnum = uint(keccak256(abi.encodePacked(block.timestamp, msg.sender, randNonce)));
+    setRandomNumber(randomnum, msg.sender, _reqId);
+    return _reqId;
   }
 
 

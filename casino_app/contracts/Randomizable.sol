@@ -1,18 +1,24 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.0;
 
+import "hardhat/console.sol";
 import "./RandomnessOracleInterface.sol";
 import "./Ownable.sol";
-import "./consoleNuestra.sol";
+//import "./consoleNuestra.sol";
 
 interface RandomizableInterface {
     
     event newOracleAddressEvent(address oracleAddress);
     event ReceivedNewRequestIdEvent(uint256 id);
     function setOracleInstanceAddress (address _oracleInstanceAddress) external;
-    
+    function updateRandomNumber() external;
     function callback(uint256 _randomNumber, uint256 _id) external;
 }
 
+interface CallerContract {
+    function execute(uint256 _randomNumber) external;
+}
 
 contract Randomizable is Ownable {
     
@@ -20,9 +26,12 @@ contract Randomizable is Ownable {
     address private oracleAddress;
     uint256 internal randomNumber;
     mapping(uint256=>bool) myRequests;
+    mapping(uint256=>address) requestIdToAddress;
     event newOracleAddressEvent(address oracleAddress);
     event ReceivedNewRequestIdEvent(uint256 id);
     event RandomNumberUpdatedEvent(uint256 randomNumber, uint256 id);
+    CallerContract callerContract;
+    
     
     constructor(address _oracleAddress){
         oracleAddress = _oracleAddress;
@@ -31,17 +40,20 @@ contract Randomizable is Ownable {
     }
 
     function updateRandomNumber() public {
-        //console.log(oracleInstance);
-        uint256 id = oracleInstance.getRandomNumber();
-        myRequests[id] = true;
+        uint _requestId = uint(keccak256(abi.encodePacked(block.timestamp, msg.sender))) % 1000;
+        myRequests[_requestId] = true;
+
+        requestIdToAddress[_requestId] = msg.sender;
+        
+        uint256 id = oracleInstance.getRandomNumber(_requestId);
         emit ReceivedNewRequestIdEvent(id);
     }
 
     function callback(uint256 _randomNumber, uint256 _id) public onlyOracle {
-        //TODO ver lo del error de la pending list
-        //require(myRequests[_id], "This request is not in my pending list.");
-        randomNumber = _randomNumber;
-        //delete myRequests[_id];
+        require(myRequests[_id], "This request is not in my pending list.");
+        callerContract = CallerContract(requestIdToAddress[_id]);
+        callerContract.execute(_randomNumber);
+        myRequests[_id] = false;
         emit RandomNumberUpdatedEvent(_randomNumber, _id);
     }
 

@@ -6,10 +6,10 @@ import "./IERC20Metadata.sol";
 import "./Ownable.sol";
 
 // interface Aion
-abstract contract Aion {
-  uint256 public serviceFee;
-  function ScheduleCall(uint256 blocknumber, address to, uint256 value, uint256 gaslimit, uint256 gasprice, bytes memory data, bool schedType) public virtual payable returns (uint,address);
-}
+/*interface Aion {
+  uint256 serviceFee;
+  function ScheduleCall(uint256 blocknumber, address to, uint256 value, uint256 gaslimit, uint256 gasprice, bytes memory data, bool schedType) payable external returns (uint,address);
+}*/
 
 
 //ver bien si necesitamos heredar de Context
@@ -21,7 +21,7 @@ contract CryptoChip is IERC20, IERC20Metadata, Ownable{
   string private _name;
   string private _symbol;
   address private _casinoAddress;
-  Aion aion;
+  //Aion aion;
 
   constructor(string memory name_, string memory symbol_, uint256 initialSupply_, address casinoAddress_) {
     _name = name_;
@@ -32,7 +32,7 @@ contract CryptoChip is IERC20, IERC20Metadata, Ownable{
     //scheduleDailyMint();
   }
 
-  function scheduleDailyMint() internal {
+ /* function scheduleDailyMint() internal {
     aion = Aion(0xFcFB45679539667f7ed55FA59A15c8Cad73d9a4E); //ropsten address - verify if works 
     bytes memory data = abi.encodeWithSelector(bytes4(keccak256('dailyMint()')));
     uint callCost = 200000*1e9 + aion.serviceFee();
@@ -43,7 +43,7 @@ contract CryptoChip is IERC20, IERC20Metadata, Ownable{
     _mint(_casinoAddress, 100);
     scheduleDailyMint();
   }
-
+*/
   function setCasinoAddress(address casinoAdress) public onlyOwner{
     _casinoAddress = casinoAdress;
   }
