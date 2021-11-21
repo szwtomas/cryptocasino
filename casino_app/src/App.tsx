@@ -156,7 +156,7 @@ function App() {
         await transaction.wait();
         await getDiceInformation();
         await getBalance();
-      }
+      } 
     
     }
 
