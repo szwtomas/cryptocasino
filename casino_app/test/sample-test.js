@@ -20,15 +20,18 @@ describe("Greeter", function () {
 
 describe("CryptoCasino", function () {
   it("Should buy 50 tokens if msg.value = 0,5", async function () {
+
+    const RandomnessOracle = await hre.ethers.getContractFactory("RandomnessOracle");
+    const rO = await RandomnessOracle.deploy();
+    await rO.deployed();
+
+    const Randomizable = await hre.ethers.getContractFactory("Randomizable");
+    const r = await Randomizable.deploy(rO.address);
+    await r.deployed();
+
     const CryptoCasino = await ethers.getContractFactory("CryptoCasino");
-    const cc = await CryptoCasino.deploy();
+    const cc = await CryptoCasino.deploy(r.address);
     await cc.deployed();
-
-    const CryptoChip = await ethers.getContractFactory("CryptoChip");
-    const cryptoChip = await CryptoChip.deploy("CryptoChip", "CCP", 1000, cc.address);
-    await cryptoChip.deployed();
-
-    await cc.setChipContractAddress(cryptoChip.address);
 
     expect(await cc.balance()).to.equal(0);
 
@@ -46,15 +49,18 @@ describe("CryptoCasino", function () {
 
   });
   it("Should revert the transaction", async function () {
+
+    const RandomnessOracle = await hre.ethers.getContractFactory("RandomnessOracle");
+    const rO = await RandomnessOracle.deploy();
+    await rO.deployed();
+
+    const Randomizable = await hre.ethers.getContractFactory("Randomizable");
+    const r = await Randomizable.deploy(rO.address);
+    await r.deployed();
+
     const CryptoCasino = await ethers.getContractFactory("CryptoCasino");
-    const cc = await CryptoCasino.deploy();
+    const cc = await CryptoCasino.deploy(r.address);
     await cc.deployed();
-
-    const CryptoChip = await ethers.getContractFactory("CryptoChip");
-    const cryptoChip = await CryptoChip.deploy("CryptoChip", "CCP", 1000, cc.address);
-    await cryptoChip.deployed();
-
-    await cc.setChipContractAddress(cryptoChip.address);
 
     await expect(cc.buy({value: ethers.utils.parseEther("10.01")})).to.be.revertedWith(
       "Not enough tokens in the reserve"
