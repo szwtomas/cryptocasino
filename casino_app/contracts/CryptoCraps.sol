@@ -13,7 +13,8 @@ contract CryptoCraps is CryptoCasino {
     uint8 public currentPlayersCount;
     uint256 public currentBetValue;
 
-    event DiceRolled(uint8 diceNumber);
+    event DiceRolled(address winnerAddress);
+    event PlayerAdded(uint8 currentPlayersCount);
     
     constructor (address _randomizableContract) CryptoCasino(_randomizableContract){
         currentPlayersCount = 0;
@@ -44,6 +45,7 @@ contract CryptoCraps is CryptoCasino {
                 randomProviderContract.updateRandomNumber();
             }
         } 
+        emit PlayerAdded(currentPlayersCount);
     }
     
     function execute(uint256 randomNumber) external{
@@ -55,6 +57,7 @@ contract CryptoCraps is CryptoCasino {
             addressToBet[diceToAddress[i]] = 0;
             diceToAddress[i] = address(0);
         }
-        emit DiceRolled(diceNumber);
+        currentBetValue = 0;
+        emit DiceRolled(winner);
     }
 }
