@@ -9,6 +9,7 @@ import Dice from 'react-dice-roll';
 import {FancyButton} from "./FancyButton";
 import Greeter from "./artifacts/contracts/Greeter.sol/Greeter.json";
 import CryptoCasino from "./artifacts/contracts/CryptoCraps.sol/CryptoCraps.json";
+import { RouletteWheel } from './RouletteWheel';
 
 
 
@@ -256,32 +257,12 @@ function App() {
 
           {
             gameState == 'roulette' && 
-            <div style={{ marginTop: 30, display: "flex", flexDirection: "column", alignItems: "center"}}>
-            <div style={{backgroundColor: "#d7d7d7", width: 200, height: 200, border: "10px ridge #c13f3f", display: "flex", justifyContent: "center", alignItems: "center"}}>
-              	<Dice rollingTime={10000} size={100} faceBg={"#d7d7d7"} faces={['Dice-1-b.svg.png','/Dice-2-b.svg.png','/Dice-3-b.svg.png','/Dice-4-b.svg.png','/Dice-5-b.svg.png','/Dice-6-b.svg.png' ]}
-				      />
-            </div>
-            <div style={{marginTop: 20, display: "flex", flexDirection: "column", alignItems: "center"}}>
-            <Title style={{fontWeight: 800, margin: 10, fontSize: "1.5rem", color: "white"}}>{`Current Bet Value: ${currentBetValue} chips`}  </Title>
-            <Title style={{fontWeight: 800, margin: 20, fontSize: "1.5rem", color: "white"}}>{`${currentPlayersRemaining} Players remaining to join...`}  </Title>
-            {
-              !playingDice && <div style={{display: "flex", flexDirection: "column", alignItems: "center"}}>
+            <div>
+           <RouletteWheel/>
+           
               <FancyButton customStyle={{width: 300}} text="Join Game" onClick={() =>  betSingleDice (choice, bet)}/>
-              <Title style={{fontWeight: 800, margin: 20, fontSize: "1.5rem", color: "white"}}>Choose a number between 1 and 6 </Title>
-              <InputNumber style={{backgroundColor: "black", padding: 10, color: "white",  fontSize: 20}} defaultValue={1} value={choice} onChange={(newchoice) => setChoice(newchoice)}></InputNumber>
-              </div>
-            }
-            {
-              currentPlayersRemaining === 6 &&
-              <div style={{display: "flex", flexDirection: "column", alignItems: "center"}}>
-                <Title style={{fontWeight: 800, margin: 20, fontSize: "1.5rem", color: "white"}}>Choose how much to bet </Title>
-                <InputNumber style={{backgroundColor: "black", padding: 10, color: "white",  fontSize: 20}} defaultValue={0} value={bet} onChange={(newbet) => setBet(newbet)}></InputNumber>
-              </div>
-            }
-            
             <FancyButton customStyle={{width: 300}} text="Back to Menu" onClick={() =>  setGameState("menu")}/>
             </div>
-                </div>
           } 
       </div>
       </Layout>
