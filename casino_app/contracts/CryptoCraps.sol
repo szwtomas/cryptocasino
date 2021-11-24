@@ -13,7 +13,7 @@ contract CryptoCraps is CryptoCasino {
     uint8 public currentPlayersCount;
     uint256 public currentBetValue;
 
-    event DiceRolled(address winnerAddress);
+    event DiceRolled(address winnerAddress, uint8 diceNumber);
     event PlayerAdded(uint8 currentPlayersCount);
     
     constructor (address _randomizableContract) CryptoCasino(_randomizableContract){
@@ -32,7 +32,7 @@ contract CryptoCraps is CryptoCasino {
     
         if (currentPlayersCount <= 2){
             if(currentPlayersCount == 0){
-                require(bet <= 100, "100 is the maximum amount of chips you can bet in this game");
+                require(bet <= 200, "100 is the maximum amount of chips you can bet in this game");
                 currentBetValue = bet;
             } else{
                 require(bet == currentBetValue, "you have to bet currentBetValue");
@@ -58,6 +58,6 @@ contract CryptoCraps is CryptoCasino {
             diceToAddress[i] = address(0);
         }
         currentBetValue = 0;
-        emit DiceRolled(winner);
+        emit DiceRolled(winner, diceNumber);
     }
 }
