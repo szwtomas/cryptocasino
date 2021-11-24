@@ -6,12 +6,15 @@ import "./Randomizable.sol";
 import "./Ownable.sol";
 import "./CryptoChip.sol";
 import "./IERC20.sol";
+import "./CryptoCasinoInterface.sol";
+import "./CryptoGame.sol";
 
-//crypto casino game tal vez es un mejor nombre
-contract CryptoCasino is Ownable {
+//CryptoCasinoGame tal vez es un mejor nombre
+contract CryptoCasino is CryptoCasinoInterface, Ownable {
 
     IERC20 internal chipContract;
     RandomizableInterface internal randomProviderContract; 
+    CryptoGame[] internal _games;
 
     event Bought(uint256 amount);
     event Sold(uint256 amount);
@@ -21,9 +24,18 @@ contract CryptoCasino is Ownable {
         randomProviderContract = RandomizableInterface(_randomizableContract);
     }
 
+    function addGame(address _gameAddress) public onlyOwner{
+        CryptoGame newGame = CryptoGame(_gameAddress);
+        _games.push(newGame);
+    }
+
+    function removeGame(uint8 gameNumber) public onlyOwner{
+        _games[gameNumber] = _games[_games.length-1];
+        delete _games[_games.length-1];
+    }
+
     function buy() public payable {
         uint256 amountToBuy = msg.value;
-        //uint256 resto = amountToBuy % 10000000000000000;
         amountToBuy = amountToBuy / 10000000000000000; //0,01
         uint256 chipCount = chipContract.balanceOf(address(this));
         require(amountToBuy > 0, "You need to send some ether");
@@ -45,15 +57,27 @@ contract CryptoCasino is Ownable {
         return chipContract.balanceOf(msg.sender);
     }
 
-    function setChipContractAddress(address _address) external onlyOwner {
-        chipContract = IERC20(_address);
+    modifier OnlyValidGames(){
+        bool isValidGame = false;
+        for (uint8 i = 0; i < _games.length; i++){
+            if (address(_games[i]) == msg.sender) {
+                isValidGame = true;
+            }
+        }
+        require(isValidGame, "Action denied");
+        _;
     }
 
-    modifier onlyValidFunds(uint256 amount) {
-        require(amount > 0, "You need to bet at least one chip");
-        uint playerChips = chipContract.balanceOf(msg.sender);
-        require(amount <= playerChips, "Not enough funds to bet that amount"); 
-        _;
+    function transfer(address recipient, uint amount) external  OnlyValidGames returns (bool) {
+        return chipContract.transfer(recipient, amount);
+    }
+
+    function transferFrom(address sender, uint amount) external OnlyValidGames returns(bool) {
+        return chipContract.transferFrom(sender, address(this), amount);
+    }
+
+    function updateRandomNumber() external {
+        randomProviderContract.updateRandomNumber(msg.sender);
     }
 
 }

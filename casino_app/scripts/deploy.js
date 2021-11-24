@@ -24,9 +24,15 @@ async function main() {
   const r = await Randomizable.deploy(rO.address);
   await r.deployed();
 
+  const CryptoCasino = await hre.ethers.getContractFactory("CryptoCasino");
+  const cc = await CryptoCasino.deploy(r.address);
+  await cc.deployed();
+
   const CryptoCraps = await hre.ethers.getContractFactory("CryptoCraps");
-  const ccr = await CryptoCraps.deploy(r.address);
+  const ccr = await CryptoCraps.deploy(cc.address);
   await ccr.deployed();
+
+  cc.addGame(ccr.address);
 
 }
 

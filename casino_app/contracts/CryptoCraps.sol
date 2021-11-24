@@ -4,23 +4,25 @@ pragma solidity ^0.8.0;
 
 import "./CryptoCasino.sol";
 import "./Randomizable.sol";
+import "./OnlyValidFunds.sol";
+import "./CryptoCasinoInterface.sol";
+import "./CryptoGame.sol";
 
-contract CryptoCraps is CryptoCasino {
+contract CryptoCraps is CryptoGame, OnlyValidFunds {
 
-    
-    mapping(uint8 => address) private diceToAddress;
-    mapping(address => uint256) private addressToBet;
+    mapping(uint8 => address) internal diceToAddress;
+    mapping(address => uint256) internal addressToBet;
     uint8 public currentPlayersCount;
     uint256 public currentBetValue;
 
     event DiceRolled(address winnerAddress, uint8 diceNumber);
     event PlayerAdded(uint8 currentPlayersCount);
     
-    constructor (address _randomizableContract) CryptoCasino(_randomizableContract){
-        currentPlayersCount = 0;
-    }
+    CryptoCasinoInterface casino;
 
-    //Single dice, user chooses number and get x4 
+    constructor (address casinoAddress){
+        casino = CryptoCasinoInterface(casinoAddress);
+    }
     
     function playerPlayingDice() external view returns (bool) {
         return addressToBet[msg.sender] > 0;
@@ -37,12 +39,13 @@ contract CryptoCraps is CryptoCasino {
             } else{
                 require(bet == currentBetValue, "you have to bet currentBetValue");
             }
-            chipContract.transferFrom(msg.sender, address(this), bet);
+            casino.transferFrom(msg.sender, bet);
+            //chipContract.transferFrom(msg.sender, address(this), bet);
             addressToBet[msg.sender] = bet;
             diceToAddress[choice] = msg.sender;
             currentPlayersCount++;
             if(currentPlayersCount == 2){
-                randomProviderContract.updateRandomNumber();
+                casino.updateRandomNumber();
             }
         } 
         emit PlayerAdded(currentPlayersCount);
@@ -51,7 +54,8 @@ contract CryptoCraps is CryptoCasino {
     function execute(uint256 randomNumber) external{
         uint8 diceNumber = uint8(randomNumber % 2 + 1);
         address winner = diceToAddress[diceNumber];
-        chipContract.transfer(winner, currentBetValue * 4); // * 4 porque asi el casino se queda con el valor de 1 bet
+        casino.transfer(winner, currentBetValue * 4);
+        //chipContract.transfer(winner, currentBetValue * 4); // * 4 porque asi el casino se queda con el valor de 1 bet
         currentPlayersCount = 0;
         for(uint8 i = 1; i <= 2; i++){
             addressToBet[diceToAddress[i]] = 0;
