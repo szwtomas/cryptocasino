@@ -8,12 +8,12 @@ import Dice from 'react-dice-roll';
 
 import {FancyButton} from "./FancyButton";
 import Greeter from "./artifacts/contracts/Greeter.sol/Greeter.json";
-import CryptoCasino from "./artifacts/contracts/CryptoCraps.sol/CryptoCraps.json";
+import CryptoCasino from "./artifacts/contracts/CryptoCasino.sol/CryptoCasino.json";
+import CryptoCraps from "./artifacts/contracts/CryptoCraps.sol/CryptoCraps.json";
 import { RouletteWheel } from './RouletteWheel';
 
-
-
-const casinoContractAddress = "0x1613beb3b2c4f22ee086b2b38c1476a3ce7f78e8";
+const casinoContractAddress = "0x1291be112d480055dafd8a610b7d1e203891c274";
+const crapsContractAddress = "0x5f3f1dbd7b74c6b46e8c44f98792a1daf8d69154";
 
 const { Header, Footer, Content, Sider } = Layout;
 const {Title} = Typography;
@@ -77,9 +77,10 @@ function App() {
     if (typeof window.ethereum !== 'undefined') {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner()
-      const contract = new ethers.Contract(casinoContractAddress, CryptoCasino.abi, signer)
+      const contract = new ethers.Contract(crapsContractAddress, CryptoCraps.abi, signer)
 
       contract.on("DiceRolled", async (winnerAddress, diceNumber) => {
+        console.log("dice rolled!");
         if(playingDiceRef.current) {
          setWinningDice(diceNumber);
          setTimeout(async () => {
@@ -95,6 +96,7 @@ function App() {
       });
 
       contract.on("PlayerAdded", async (currentPlayers) => {
+        console.log("nuevo player");
         await getDiceInformation();
       });
 
@@ -121,7 +123,7 @@ function App() {
       if (typeof window.ethereum !== 'undefined') {
         const provider = new ethers.providers.Web3Provider(window.ethereum)
         const signer = provider.getSigner()
-        const contract = new ethers.Contract(casinoContractAddress, CryptoCasino.abi, signer)
+        const contract = new ethers.Contract(crapsContractAddress, CryptoCraps.abi, signer)
         try {
           const currentPlayers = await contract.currentPlayersCount();
           setCurrentPlayersRemaining(6 - currentPlayers);
@@ -177,7 +179,7 @@ function App() {
         await requestAccount()
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const signer = provider.getSigner();
-        const contract = new ethers.Contract(casinoContractAddress, CryptoCasino.abi, signer);
+        const contract = new ethers.Contract(crapsContractAddress, CryptoCraps.abi, signer);
         const transaction = await contract.betNumberSingleDice(diceNumber, bet);
         await transaction.wait();
         setPlayingDice(true);

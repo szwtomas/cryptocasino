@@ -14,7 +14,7 @@ contract CryptoCasino is CryptoCasinoInterface, Ownable {
 
     IERC20 internal chipContract;
     RandomizableInterface internal randomProviderContract; 
-    CryptoGame[] internal _games;
+    address[] internal _games;
 
     event Bought(uint256 amount);
     event Sold(uint256 amount);
@@ -25,13 +25,16 @@ contract CryptoCasino is CryptoCasinoInterface, Ownable {
     }
 
     function addGame(address _gameAddress) public onlyOwner{
-        CryptoGame newGame = CryptoGame(_gameAddress);
-        _games.push(newGame);
+        _games.push(_gameAddress);
     }
 
     function removeGame(uint8 gameNumber) public onlyOwner{
         _games[gameNumber] = _games[_games.length-1];
         delete _games[_games.length-1];
+    }
+
+    function balanceOf(address addr) override external view returns(uint256){
+        return chipContract.balanceOf(addr);
     }
 
     function buy() public payable {
@@ -53,30 +56,31 @@ contract CryptoCasino is CryptoCasinoInterface, Ownable {
         emit Sold(amount);
     }
 
-    function balance() public view returns (uint256) {
-        return chipContract.balanceOf(msg.sender);
-    }
-
-    modifier OnlyValidGames(){
+    //TODO: Resolver OnlyValidGames
+   /* modifier OnlyValidGames(address caller){
         bool isValidGame = false;
         for (uint8 i = 0; i < _games.length; i++){
-            if (address(_games[i]) == msg.sender) {
+            if (_games[i] == caller) {
                 isValidGame = true;
             }
         }
-        require(isValidGame, "Action denied");
+        require(isValidGame, "Action de nied");
         _;
+    }*/
+
+    function balance() external view returns(uint256){
+        return chipContract.balanceOf(msg.sender);
     }
 
-    function transfer(address recipient, uint amount) external  OnlyValidGames returns (bool) {
+    function transfer(address recipient, uint amount) override external returns (bool) {
         return chipContract.transfer(recipient, amount);
     }
 
-    function transferFrom(address sender, uint amount) external OnlyValidGames returns(bool) {
+    function transferFrom(address sender, uint amount) override external returns(bool) {
         return chipContract.transferFrom(sender, address(this), amount);
     }
 
-    function updateRandomNumber() external {
+    function updateRandomNumber() override external {
         randomProviderContract.updateRandomNumber(msg.sender);
     }
 

@@ -78,7 +78,7 @@ contract CryptoChip is IERC20, IERC20Metadata, Ownable{
   }
 
   
-  function approve(address spender, uint256 amount) public virtual override returns (bool) {
+  function approve(address, uint256) public virtual override returns (bool) {
     return false;
   }
 
@@ -117,7 +117,7 @@ contract CryptoChip is IERC20, IERC20Metadata, Ownable{
     *
     * - `spender` cannot be the zero address.
     */
-  function increaseAllowance(address spender, uint256 addedValue) public virtual returns (bool) {
+  function increaseAllowance(address, uint256) public virtual returns (bool) {
     return false;
   }
 
@@ -135,7 +135,7 @@ contract CryptoChip is IERC20, IERC20Metadata, Ownable{
     * - `spender` must have allowance for the caller of at least
     * `subtractedValue`.
     */
-  function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {
+  function decreaseAllowance(address, uint256) public virtual returns (bool) {
     return false;
   }
 

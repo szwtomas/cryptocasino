@@ -28,7 +28,7 @@ contract CryptoCraps is CryptoGame, OnlyValidFunds {
         return addressToBet[msg.sender] > 0;
     }
 
-    function betNumberSingleDice(uint8 choice, uint256 bet) public onlyValidFunds(bet) {
+    function betNumberSingleDice(uint8 choice, uint256 bet) public onlyValidFunds(bet, casino.balanceOf(msg.sender)) {
         require(diceToAddress[choice] == address(0), "that dice choice has already been chosen");
         require(currentPlayersCount <= 2, "table is full. Come back later");
     
@@ -51,7 +51,7 @@ contract CryptoCraps is CryptoGame, OnlyValidFunds {
         emit PlayerAdded(currentPlayersCount);
     }
     
-    function execute(uint256 randomNumber) external{
+    function execute(uint256 randomNumber) override external {
         uint8 diceNumber = uint8(randomNumber % 2 + 1);
         address winner = diceToAddress[diceNumber];
         casino.transfer(winner, currentBetValue * 4);
