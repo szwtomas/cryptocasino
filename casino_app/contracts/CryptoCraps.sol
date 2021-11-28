@@ -55,7 +55,6 @@ contract CryptoCraps is CryptoGame, OnlyValidFunds {
         uint8 diceNumber = uint8(randomNumber % 2 + 1);
         address winner = diceToAddress[diceNumber];
         casino.transfer(winner, currentBetValue * 4);
-        //chipContract.transfer(winner, currentBetValue * 4); // * 4 porque asi el casino se queda con el valor de 1 bet
         currentPlayersCount = 0;
         for(uint8 i = 1; i <= 2; i++){
             addressToBet[diceToAddress[i]] = 0;

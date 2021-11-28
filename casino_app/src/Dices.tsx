@@ -20,10 +20,6 @@ const {Title} = Typography;
 
 function App() {
 
-
-  const [buyAmount, setBuyAmount] = useState<number>(0);
-  const [sellAmount, setSellAmount] = useState<number>(0);
-  const [currentChipAmount, setCurrentChipAmount] = useState<number>(0);
   const [gameState, setGameState] = useState<'menu' | 'dices' | 'slots' | 'roulette'>("menu");
   const [currentPlayersRemaining, setCurrentPlayersRemaining] = useState<number>(6);
   const [currentBetValue, setCurrentBetValue] = useState<number>(0);
@@ -32,7 +28,6 @@ function App() {
   const [playingDice, _setPlayingDice] = useState<boolean>(false);
   const [winningDice, _setWinningDice] = useState<1 | 2 | 3 | 4 | 5 | 6>(1);
 
-  
   const betRef = useRef(bet);
   const choiceRef = useRef(choice);
   const playingDiceRef = useRef(playingDice);
