@@ -5,102 +5,147 @@ import "./CryptoCasinoInterface.sol";
 import "./CryptoGame.sol";
 
 contract CryptoRoulette is CryptoGame {
-    
     struct NumberBet {
-      uint8 number;
-      uint256 bet;
+        uint8 number;
+        uint256 bet;
     }
 
-    enum BetColor {Red, Blue}
+    enum BetColor {
+        Red,
+        Black
+    }
 
     struct ColorBet {
-      BetColor color;
-      uint256 bet;
+        BetColor color;
+        uint256 bet;
     }
 
-    struct PlayerBet {
+    struct RoulettePlayer {
         address playerAddress;
-        NumberBet[37] numberBets;
-        ColorBet[2] colorBets;
         uint256 chipsWon;
-    }
-
-    struct Child {
-        uint ed;
-    } 
-
-    struct Parent { 
-        mapping(uint => Child) children;
-        uint childrenSize;
+        uint256 numberBetsCount;
+        uint256 colorBetsCount;
+        mapping(uint256 => NumberBet) numberBets;
+        mapping(uint256 => ColorBet) colorBets;
     }
 
     CryptoCasinoInterface casino;
-    PlayerBet[2] public roulettePlayers;
 
-    uint numPlayers;
+    uint256 public playersCount;
+    mapping(uint256 => RoulettePlayer) public players;
 
-    constructor (address casinoAddress) {
+    event RouletteRolled(uint8 number, address playerAddress, uint256 chipsWon);
+    event PlayerAdded(uint8 playersCount);
+
+    constructor(address casinoAddress) {
         casino = CryptoCasinoInterface(casinoAddress);
-        numPlayers = 0;
+        playersCount = 0;
     }
 
-    event RouletteRolled(address winner, uint8 number);
-    event PlayerAdded(uint8 currentPlayersCount);
-    
-   
+    function playerIsPlaying() public view returns (bool) {
+        for (uint8 i = 0; i < playersCount; i++) {
+            if (players[i].playerAddress == msg.sender) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-    function addPlayerToRoulette(NumberBet[2] memory numbBets, uint8 numbBetsSize, ColorBet[1] memory colBets, uint8 colBetsSize) public {
-        require(numPlayers <= 2, "Table is full, come back later.");
+    function getPlayerData() external view returns (NumberBet[] memory numbBet, ColorBet[] memory colBet) {
+      RoulettePlayer storage player = players[0];
+      
+       for (uint8 i = 0; i < playersCount; i++) {
+            if (players[i].playerAddress == msg.sender) {
+                player = players[i];
+            }
+        }
+      require(player.playerAddress == msg.sender, "player is not playing");
+
+      NumberBet[] memory numberBets = new NumberBet[](player.numberBetsCount);
+      ColorBet[] memory colorBets = new ColorBet[](player.colorBetsCount);
+
+      for (uint8 i = 0; i < player.numberBetsCount; i++) {
+                numberBets[i] = player.numberBets[i];
+        }
+
+      for (uint8 i = 0; i < player.colorBetsCount; i++) {
+              colorBets[i] = player.colorBets[i];
+      }
+
+      return (numberBets, colorBets);
+    }
+
+    function addPlayerToRoulette(
+        NumberBet[] memory numbBets,
+        ColorBet[] memory colBets
+    ) public {
+        require(playersCount <= 2, "Table is full, come back later.");
         uint256 quantity = 0;
-        for(uint8 j = 0; j < numbBetsSize; j++){
-            quantity += numbBets[j].bet;
+
+        for (uint i = 0; i < numbBets.length; i++) {
+             quantity += numbBets[i].bet;
         }
 
-        for(uint8 j = 0; j < colBetsSize; j++){
-            quantity += colBets[j].bet;
+        for (uint i = 0; i < colBets.length; i++) {
+            quantity += colBets[i].bet;
         }
+
         casino.transferFrom(msg.sender, quantity);
-        PlayerBet storage currentPlayer = roulettePlayers[numPlayers++];
-        currentPlayer.playerAddress = msg.sender;
-        currentPlayer.chipsWon = 0;
 
-        for(uint8 j = 0; j < numbBetsSize; j++){
-            currentPlayer.numberBets[j] = NumberBet(numbBets[j].number, numbBets[j].bet);
+
+        RoulettePlayer storage player = players[playersCount++];
+        player.playerAddress = msg.sender;
+        player.chipsWon = 0;
+
+         for (uint i = 0; i < numbBets.length; i++) {
+            NumberBet memory numberBet = numbBets[i];
+            player.numberBets[player.numberBetsCount++] = numberBet;
         }
 
-        for(uint8 j = 0; j < colBetsSize; j++){
-            currentPlayer.colorBets[j] = ColorBet(colBets[j].color, colBets[j].bet);
+        for (uint i = 0; i < colBets.length; i++) {
+            ColorBet memory colorBets = colBets[i];
+            player.colorBets[player.colorBetsCount++] = colorBets;
         }
 
-        if (numPlayers == 2){
+        if (playersCount == 2) {
             casino.updateRandomNumber();
         }
     }
 
-    function execute(uint256 randomNumber) override external {
-      uint8 rouletteNumber = uint8(randomNumber % 37 + 1);
-      address winner = address(0);
-      for(uint8 i = 0; i < 1; i++){
-        PlayerBet storage playerBet = roulettePlayers[i];
-        NumberBet[37] storage numbBets = playerBet.numberBets;
-        for(uint8 j = 0; j < numbBets.length; j++){
-          if(numbBets[j].number == rouletteNumber) {
-            playerBet.chipsWon = playerBet.chipsWon + numbBets[j].bet * 2;
-          }
+    function execute(uint256 randomNumber) external override {
+        
+        uint8 rouletteNumber = uint8((randomNumber % 2) + 1);
+        for (uint8 i = 0; i < playersCount; i++) {
+            RoulettePlayer storage player = players[i];
+            for (uint8 j = 0; j < player.numberBetsCount; j++) {
+                if (player.numberBets[j].number == rouletteNumber) {
+                    player.chipsWon =
+                        player.chipsWon +
+                        player.numberBets[j].bet *
+                        2;
+                }
+                delete player.numberBets[j];
+            }
+
+            for (uint8 j = 0; j < player.colorBetsCount; j++) {
+                BetColor rouletteColor = BetColor(rouletteNumber % 1);
+                if (player.colorBets[j].color == rouletteColor) {
+                    player.chipsWon =
+                        player.chipsWon +
+                        player.colorBets[j].bet *
+                        2;
+                }
+                delete player.colorBets[j];
+            }
+
+            casino.transfer(
+                player.playerAddress,
+                player.chipsWon
+            );
+            emit RouletteRolled(rouletteNumber, player.playerAddress, player.chipsWon);
+            delete players[i];
         }
 
-        ColorBet[2] storage colBets = playerBet.colorBets;
-        for(uint8 j = 0; j < colBets.length; j++){
-          BetColor rouletteColor = BetColor(rouletteNumber%1);
-          if(colBets[j].color == rouletteColor) {
-            playerBet.chipsWon = playerBet.chipsWon + colBets[j].bet * 2;
-          }
-        }
-        casino.transfer(playerBet.playerAddress, playerBet.chipsWon);
-      }
-
-      numPlayers = 0;
-
-      emit RouletteRolled(winner, rouletteNumber);
+        playersCount = 0;
     }
 }

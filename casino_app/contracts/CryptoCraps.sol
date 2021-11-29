@@ -24,7 +24,7 @@ contract CryptoCraps is CryptoGame, OnlyValidFunds {
         casino = CryptoCasinoInterface(casinoAddress);
     }
     
-    function playerPlayingDice() external view returns (bool) {
+    function playerIsPlaying() external view returns (bool) {
         return addressToBet[msg.sender] > 0;
     }
 

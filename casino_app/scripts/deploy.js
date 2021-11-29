@@ -32,7 +32,13 @@ async function main() {
   const ccr = await CryptoCraps.deploy(cc.address);
   await ccr.deployed();
 
+  const CryptoRoulette = await hre.ethers.getContractFactory("CryptoRoulette");
+  const crr = await CryptoRoulette.deploy(cc.address);
+  await crr.deployed();
+
+
   cc.addGame(ccr.address);
+  cc.addGame(crr.address);
 
 }
 

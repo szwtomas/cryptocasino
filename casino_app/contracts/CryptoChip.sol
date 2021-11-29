@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "./IERC20.sol";
 import "./IERC20Metadata.sol";
 import "./Ownable.sol";
-
+import "hardhat/console.sol";
 // interface Aion
 /*interface Aion {
   uint256 serviceFee;
@@ -149,6 +149,7 @@ contract CryptoChip is IERC20, IERC20Metadata, Ownable{
 
 
     uint256 senderBalance = _chipCount[sender];
+    console.log(senderBalance, amount);
     require(senderBalance >= amount, "ERC20: transfer amount exceeds balance");
     unchecked {
         _chipCount[sender] = senderBalance - amount;

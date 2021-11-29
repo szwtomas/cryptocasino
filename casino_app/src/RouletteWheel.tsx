@@ -1,14 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './App.css';
 
 import { Wheel } from 'react-custom-roulette';
-import { FancyButton } from './FancyButton';
 
-export const RouletteWheel = () => {
-  const [mustSpin, setMustSpin] = useState(false);
-  const [prizeNumber, setPrizeNumber] = useState(0);
-  
-  const data = Array.from(Array(34).keys()).map(n => ({option: n.toString()}));
+export const RouletteWheel = (props: { winningNumber?: number, spin: boolean, onStopSpinning: () => void}) => {  
+  let data = Array.from(Array(37).keys()).map(n => ({option: (n+1).toString()}));
 
   const backgroundColors = ['red', 'black'];
   const textColors = ['white'];
@@ -22,19 +18,14 @@ export const RouletteWheel = () => {
   const fontSize = 17;
   const textDistance = 70;
 
-  const handleSpinClick = () => {
-    const newPrizeNumber = Math.floor(Math.random() * data.length)
-    setPrizeNumber(newPrizeNumber)
-    setMustSpin(true)
-  }
 
 
 
   return (
-    <div >
+    <div style={{display: "flex", flexDirection: "column", justifyContent: "center"}}>
         <Wheel
-          mustStartSpinning={mustSpin}
-          prizeNumber={prizeNumber}
+          mustStartSpinning={props.spin}
+          prizeNumber={props.winningNumber ? props.winningNumber - 1 : 1}
           data={data}
           backgroundColors={backgroundColors}
           textColors={textColors}
@@ -49,11 +40,8 @@ export const RouletteWheel = () => {
           perpendicularText
           textDistance={textDistance}
 
-          onStopSpinning={() => {
-            setMustSpin(false)
-          }}
+          onStopSpinning={props.onStopSpinning}
         />
-        <FancyButton text={"SPIN"} onClick={handleSpinClick}/>
     </div>
   );
 };
