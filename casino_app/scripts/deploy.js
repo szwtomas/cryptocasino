@@ -19,22 +19,27 @@ async function main() {
   const RandomnessOracle = await hre.ethers.getContractFactory("RandomnessOracle");
   const rO = await RandomnessOracle.deploy();
   await rO.deployed();
+  console.log("randomness oracle:", rO.address);
 
   const Randomizable = await hre.ethers.getContractFactory("Randomizable");
   const r = await Randomizable.deploy(rO.address);
   await r.deployed();
+  console.log("randomizable:", r.address);
 
   const CryptoCasino = await hre.ethers.getContractFactory("CryptoCasino");
   const cc = await CryptoCasino.deploy(r.address);
   await cc.deployed();
+ console.log("crypto casino:", cc.address);
 
   const CryptoCraps = await hre.ethers.getContractFactory("CryptoCraps");
   const ccr = await CryptoCraps.deploy(cc.address);
   await ccr.deployed();
+  console.log("craps:", ccr.address);
 
   const CryptoRoulette = await hre.ethers.getContractFactory("CryptoRoulette");
   const crr = await CryptoRoulette.deploy(cc.address);
   await crr.deployed();
+  console.log("roulette:", crr.address);
 
 
   cc.addGame(ccr.address);

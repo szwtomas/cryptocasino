@@ -19,7 +19,7 @@ import { FancyButton } from './FancyButton'
 import CryptoRoulette from './artifacts/contracts/CryptoRoulette.sol/CryptoRoulette.json'
 import { RouletteWheel } from './RouletteWheel'
 
-const rouletteContractAddress = '0x8a791620dd6260079bf849dc5567adc3f2fdc318'
+const rouletteContractAddress = '0xa3c15Ff85791E67511bf7e78E310dB1Ba7C01d77'
 
 const { Title } = Typography
 
@@ -91,6 +91,7 @@ export function Roulette(props: {
       )
 
       contract.on('RouletteRolled', async (rouletteNumber, playerAddress, chipsWon) => {
+        console.log("Roulette rolled");
         if (playingRouletteRef.current.valueOf() && playerAddress == await signer.getAddress()) {
           setWinningRouletteNumber(rouletteNumber)
           setTimeout(async () => {
@@ -104,6 +105,16 @@ export function Roulette(props: {
           }, 12000)
         } else {
           winningRouletteNumber !== undefined && getRouletteInformation()
+        }
+      })
+
+      contract.on('PlayerAdded', async (currentPlayers) => {
+        console.log("player added event received. Is playing:", playingRouletteRef.current);
+        if(playingRouletteRef.current){
+          setCurrentPlayersRemaining(2 - currentPlayers);
+          props.updateBalance();
+        } else {
+          setCurrentPlayersRemaining(2 - currentPlayers);
         }
       })
 

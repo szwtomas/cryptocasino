@@ -17,7 +17,7 @@ import Dice from 'react-dice-roll'
 import { FancyButton } from './FancyButton'
 import CryptoCraps from './artifacts/contracts/CryptoCraps.sol/CryptoCraps.json'
 
-const crapsContractAddress = '0x2279b7a0a67db372996a5fab50d91eaa73d2ebe6'
+const crapsContractAddress = '0xf5916a2cBb7E29696708202C2A1b8ECD8dD9D3d3'
 
 const { Title } = Typography
 
@@ -63,7 +63,6 @@ export function Dices(props: {
 
   useEffect(() => {
 
-    console.log("dado ganador dice", winningDice);
     winningDice !== undefined && window.dispatchEvent(
       new KeyboardEvent('keypress', {
         key: 'd',
@@ -83,6 +82,8 @@ export function Dices(props: {
       )
 
       contract.on('DiceRolled', async (winnerAddress, diceNumber) => {
+        console.log("dice rolled event received. Is playing:", playingDiceRef.current);
+
         if (playingDiceRef.current.valueOf()) {
           setWinningDice(diceNumber)
           setTimeout(async () => {
@@ -100,11 +101,14 @@ export function Dices(props: {
       })
 
       contract.on('PlayerAdded', async (currentPlayers) => {
+        console.log("player added event received. Is playing:", playingDiceRef.current);
         if(playingDiceRef.current){
-          setCurrentPlayersRemaining(6 - (await contract.currentPlayersCount()))
+          setCurrentPlayersRemaining(6 - currentPlayers)
           setCurrentBetValue(await contract.currentBetValue())
           setBet(await contract.currentBetValue())
           props.updateBalance();
+        } else {
+          getDiceInformation();
         }
       })
 
@@ -154,6 +158,7 @@ export function Dices(props: {
         signer,
       )
       const transaction = await contract.betNumberSingleDice(diceNumber, bet)
+
       await transaction.wait()
       setPlayingDice(true)
     }

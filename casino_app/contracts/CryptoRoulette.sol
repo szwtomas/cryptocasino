@@ -35,7 +35,7 @@ contract CryptoRoulette is CryptoGame {
     mapping(uint256 => RoulettePlayer) public players;
 
     event RouletteRolled(uint8 number, address playerAddress, uint256 chipsWon);
-    event PlayerAdded(uint8 playersCount);
+    event PlayerAdded(uint256 playersCount);
 
     constructor(address casinoAddress) {
         casino = CryptoCasinoInterface(casinoAddress);
@@ -107,6 +107,7 @@ contract CryptoRoulette is CryptoGame {
             player.colorBets[player.colorBetsCount++] = colorBets;
         }
 
+        emit PlayerAdded(playersCount);
         if (playersCount == 2) {
             casino.updateRandomNumber();
         }
