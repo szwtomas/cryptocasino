@@ -14,7 +14,7 @@ import { RouletteWheel } from './RouletteWheel';
 import { Dices } from './Dices';
 import { Roulette } from './Roulette';
 
-const casinoContractAddress = "0x09635F643e140090A9A8Dcd712eD6285858ceBef";
+const casinoContractAddress = "0xa8c92e3AA4fE3B421D2d48b3EABC5d9532bc49d4";
 
 const { Header, Footer, Content, Sider } = Layout;
 const {Title} = Typography;

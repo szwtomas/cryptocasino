@@ -19,7 +19,7 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { FancyButton } from './FancyButton'
 import CryptoCraps from './artifacts/contracts/CryptoCraps.sol/CryptoCraps.json'
 
-const crapsContractAddress = '0x68b1d87f95878fe05b998f19b66f4baba5de1aed'
+const crapsContractAddress = '0xf5916a2cBb7E29696708202C2A1b8ECD8dD9D3d3'
 
 const { Title } = Typography
 

@@ -11,9 +11,10 @@ import {
   Modal,
   Popconfirm,
   Row,
+  Spin,
   Typography,
 } from 'antd'
-import Dice from 'react-dice-roll'
+import { LoadingOutlined } from '@ant-design/icons';
 
 import { FancyButton } from './FancyButton'
 import CryptoRoulette from './artifacts/contracts/CryptoRoulette.sol/CryptoRoulette.json'
@@ -33,6 +34,8 @@ export function Roulette(props: {
   const [currentPlayersRemaining, setCurrentPlayersRemaining] = useState<
     number
   >(2)
+  const [waitingForTx, setWitingForTx] = useState<boolean>(false)
+
   const [numberBets, _setNumberBets] = useState<NumberBet[]>([])
   const [colorBets, _setColorBets] = useState<ColorBet[]>([])
   const [currentIndividualNumberBet, setCurrentIndividualNumberBet] = useState<
@@ -139,13 +142,19 @@ export function Roulette(props: {
       )
       console.log('obteniendo roulette info')
       try {
-        setplayingRoulette(await contract.playerIsPlaying())
+        const isPLaying = await contract.playerIsPlaying();
+        setplayingRoulette(isPLaying)
         setCurrentPlayersRemaining(2 - await contract.playersCount());
-        const {numbBet, colBet} = await contract.getPlayerData();
-        setNumberBets(numbBet);
-        setColorBets(colBet);
-      } catch (err) {
-        console.error('Error: ', err)
+        if(isPLaying){
+          const {numbBet, colBet} = await contract.getPlayerData();
+          setNumberBets(numbBet);
+          setColorBets(colBet);
+        }
+      } catch (e: any) {
+        Modal.error({
+          title: 'Something went wrong. Open console for more information',
+        })
+        console.log(e.reason, 'tx:', e.transaction)
       }
     } else {
       alert(
@@ -168,10 +177,23 @@ export function Roulette(props: {
       const transaction = await contract.addPlayerToRoulette(
         numberBets,
         colorBets,
+        {gasLimit: 400000}
       )
-      await transaction.wait()
-      props.updateBalance();
-      setplayingRoulette(true)
+      try {
+
+        setWitingForTx(true);
+        await transaction.wait()
+        props.updateBalance();
+        setplayingRoulette(true)
+        setWitingForTx(false);
+      } catch (e: any) {
+        Modal.error({
+          title: 'Something went wrong. Open console for more information',
+        })
+        console.log(e.reason, 'tx:', e.transaction)
+        
+        setWitingForTx(false);
+      }
     }
   }
 
@@ -189,7 +211,7 @@ export function Roulette(props: {
       }}
     >
       <RouletteWheel winningNumber={winningRouletteNumber} spin={rouletteShouldSpin} onStopSpinning={() => {setRouletteShouldSpin(false)}}/>
-      <Title
+      {waitingForTx && <Title
         style={{
           fontWeight: 800,
           margin: 0,
@@ -197,8 +219,20 @@ export function Roulette(props: {
           color: 'white',
         }}
       >
+        
+        {'Waiting For transaction to settle... '}<Spin indicator={<LoadingOutlined style={{ fontSize: 24, color: "white" }} spin />}></Spin>
+      </Title>}
+     { !waitingForTx && <Title
+        style={{
+          fontWeight: 800,
+          margin: 0,
+          fontSize: '1.5rem',
+          color: 'white',
+        }}
+      >
+        
         {`${currentPlayersRemaining} Players remaining to join...`}{' '}
-      </Title>
+      </Title>}
       <div
         style={{
           display: 'flex',
