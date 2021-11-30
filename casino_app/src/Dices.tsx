@@ -10,14 +10,16 @@ import {
   Layout,
   Modal,
   Row,
+  Spin,
   Typography,
 } from 'antd'
 import Dice from 'react-dice-roll'
+import { LoadingOutlined } from '@ant-design/icons';
 
 import { FancyButton } from './FancyButton'
 import CryptoCraps from './artifacts/contracts/CryptoCraps.sol/CryptoCraps.json'
 
-const crapsContractAddress = '0xf5916a2cBb7E29696708202C2A1b8ECD8dD9D3d3'
+const crapsContractAddress = '0x68b1d87f95878fe05b998f19b66f4baba5de1aed'
 
 const { Title } = Typography
 
@@ -28,11 +30,14 @@ export function Dices(props: {
   const [currentPlayersRemaining, setCurrentPlayersRemaining] = useState<
     number
   >(6)
+  const [waitingForTx, setWitingForTx] = useState<boolean>(false)
   const [currentBetValue, setCurrentBetValue] = useState<number>(0)
   const [choice, _setChoice] = useState<1 | 2 | 3 | 4 | 5 | 6>(1)
   const [bet, _setBet] = useState<number>(0)
   const [playingDice, _setPlayingDice] = useState<boolean>(false)
-  const [winningDice, _setWinningDice] = useState<1 | 2 | 3 | 4 | 5 | 6 | undefined>(undefined)
+  const [winningDice, _setWinningDice] = useState<
+    1 | 2 | 3 | 4 | 5 | 6 | undefined
+  >(undefined)
 
   const betRef = useRef(bet)
   const choiceRef = useRef(choice)
@@ -62,16 +67,21 @@ export function Dices(props: {
   }, [])
 
   useEffect(() => {
-
-    winningDice !== undefined && window.dispatchEvent(
-      new KeyboardEvent('keypress', {
-        key: 'd',
-      }),
-    )
+    winningDice !== undefined &&
+      window.dispatchEvent(
+        new KeyboardEvent('keypress', {
+          key: 'd',
+        }),
+      )
+      window.dispatchEvent(
+        new KeyboardEvent('keyup', {
+          key: 'd',
+        }),
+      )
+    
   }, [winningDice])
 
   useEffect(() => {
-    
     if (typeof window.ethereum !== 'undefined') {
       const provider = new ethers.providers.Web3Provider(window.ethereum)
       const signer = provider.getSigner()
@@ -82,7 +92,10 @@ export function Dices(props: {
       )
 
       contract.on('DiceRolled', async (winnerAddress, diceNumber) => {
-        console.log("dice rolled event received. Is playing:", playingDiceRef.current);
+        console.log(
+          'dice rolled event received. Is playing:',
+          playingDiceRef.current,
+        )
 
         if (playingDiceRef.current.valueOf()) {
           setWinningDice(diceNumber)
@@ -101,14 +114,17 @@ export function Dices(props: {
       })
 
       contract.on('PlayerAdded', async (currentPlayers) => {
-        console.log("player added event received. Is playing:", playingDiceRef.current);
-        if(playingDiceRef.current){
+        console.log(
+          'player added event received. Is playing:',
+          playingDiceRef.current,
+        )
+        if (playingDiceRef.current) {
           setCurrentPlayersRemaining(6 - currentPlayers)
           setCurrentBetValue(await contract.currentBetValue())
           setBet(await contract.currentBetValue())
-          props.updateBalance();
+          props.updateBalance()
         } else {
-          getDiceInformation();
+          getDiceInformation()
         }
       })
 
@@ -131,7 +147,7 @@ export function Dices(props: {
         CryptoCraps.abi,
         signer,
       )
-      console.log("obteniendo dice info");
+      console.log('obteniendo dice info')
       try {
         setCurrentPlayersRemaining(6 - (await contract.currentPlayersCount()))
         setCurrentBetValue(await contract.currentBetValue())
@@ -148,6 +164,14 @@ export function Dices(props: {
   }
 
   async function betSingleDice(diceNumber: number, bet: number) {
+    if (bet <= 0) {
+      Modal.error({ title: 'you need to bet at least 1 chip' })
+      return
+    }
+
+    if (diceNumber <= 0 || diceNumber > 7) {
+      Modal.error({ title: 'dice should be between 1 and 6' })
+    }
     if (typeof window.ethereum !== 'undefined') {
       await requestAccount()
       const provider = new ethers.providers.Web3Provider(window.ethereum)
@@ -157,10 +181,24 @@ export function Dices(props: {
         CryptoCraps.abi,
         signer,
       )
-      const transaction = await contract.betNumberSingleDice(diceNumber, bet)
-
-      await transaction.wait()
-      setPlayingDice(true)
+      try {
+        const transaction = await contract.betNumberSingleDice(
+          diceNumber,
+          bet,
+          { gasLimit: 300000 },
+        )
+        setPlayingDice(true)
+        setWitingForTx(true)
+        await transaction.wait()
+        setWitingForTx(false)
+      } catch (e: any) {
+        Modal.error({
+          title: 'Something went wrong. Open console for more information',
+        })
+        console.log(e.reason, 'tx:', e.transaction)
+        setPlayingDice(false)
+        setWitingForTx(false)
+      }
     }
   }
 
@@ -209,26 +247,39 @@ export function Dices(props: {
           alignItems: 'center',
         }}
       >
-        <Title
-          style={{
-            fontWeight: 800,
-            margin: 10,
-            fontSize: '1.5rem',
-            color: 'white',
-          }}
-        >
-          {`Current Bet Value: ${currentBetValue} chips`}{' '}
-        </Title>
-        <Title
-          style={{
-            fontWeight: 800,
-            margin: 20,
-            fontSize: '1.5rem',
-            color: 'white',
-          }}
-        >
-          {`${currentPlayersRemaining} Players remaining to join...`}{' '}
-        </Title>
+        { waitingForTx ? <Title
+              style={{
+                fontWeight: 800,
+                margin: 10,
+                fontSize: '1.5rem',
+                color: 'white',
+              }}
+            >
+              {'Waiting For transaction to settle... '}<Spin indicator={<LoadingOutlined style={{ fontSize: 24, color: "white" }} spin />}></Spin>
+            </Title> :
+          <div>
+            <Title
+              style={{
+                fontWeight: 800,
+                margin: 10,
+                fontSize: '1.5rem',
+                color: 'white',
+              }}
+            >
+              {`Current Bet Value: ${currentBetValue} chips`}{' '}
+            </Title>
+            <Title
+              style={{
+                fontWeight: 800,
+                margin: 20,
+                fontSize: '1.5rem',
+                color: 'white',
+              }}
+            >
+              {`${currentPlayersRemaining} Players remaining to join...`}{' '}
+            </Title>
+          </div>
+        }
         {!playingDice && (
           <div
             style={{
@@ -237,7 +288,6 @@ export function Dices(props: {
               alignItems: 'center',
             }}
           >
-           
             <Title
               style={{
                 fontWeight: 800,
@@ -292,18 +342,18 @@ export function Dices(props: {
             ></InputNumber>
           </div>
         )}
-      <div style={{marginTop: 20}}>
-      <FancyButton
-              customStyle={{ width: 300 }}
-              text="Join Game"
-              onClick={() => betSingleDice(choice, bet)}
-            />
-        <FancyButton
-          customStyle={{ width: 300 }}
-          text="Back to Menu"
-          onClick={props.onGoBack}
+        <div style={{ marginTop: 20 }}>
+          <FancyButton
+            customStyle={{ width: 300 }}
+            text="Join Game"
+            onClick={() => betSingleDice(choice, bet)}
           />
-          </div>
+          <FancyButton
+            customStyle={{ width: 300 }}
+            text="Back to Menu"
+            onClick={props.onGoBack}
+          />
+        </div>
       </div>
     </div>
   )

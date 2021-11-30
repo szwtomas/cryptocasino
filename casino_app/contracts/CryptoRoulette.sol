@@ -115,7 +115,7 @@ contract CryptoRoulette is CryptoGame {
 
     function execute(uint256 randomNumber) external override {
         
-        uint8 rouletteNumber = uint8((randomNumber % 2) + 1);
+        uint8 rouletteNumber = uint8((randomNumber % 2));
         for (uint8 i = 0; i < playersCount; i++) {
             RoulettePlayer storage player = players[i];
             for (uint8 j = 0; j < player.numberBetsCount; j++) {
