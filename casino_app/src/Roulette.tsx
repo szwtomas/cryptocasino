@@ -118,7 +118,7 @@ export function Roulette(props: {
       })
 
       contract.on('PlayerAdded', async (currentPlayers) => {
-          setCurrentPlayersRemaining(2 - Number(currentPlayers._hex));
+          setCurrentPlayersRemaining(2 - Number(currentPlayers));
       })
 
       return () => {
@@ -164,7 +164,7 @@ export function Roulette(props: {
         Modal.error({
           title: 'Something went wrong. Open console for more information',
         })
-        console.log(e.reason, 'tx:', e.transaction)
+        console.log(e.reason, e.transaction?.hash)
       }
     } else {
       alert(

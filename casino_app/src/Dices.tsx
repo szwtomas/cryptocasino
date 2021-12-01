@@ -49,8 +49,8 @@ export function Dices(props: {
     _setChoice(choice)
   }
   const setBet = (bet: number) => {
-    betRef.current = bet
-    _setBet(bet)
+    betRef.current = Number(bet)
+    _setBet(Number(bet))
   }
   const setPlayingDice = (playing: boolean) => {
     playingDiceRef.current = playing
@@ -87,16 +87,28 @@ export function Dices(props: {
           playingDiceRef.current,
         )
 
-        if (playingDiceRef.current.valueOf()) {
+        if (playingDiceRef.current) {
           setWinningDice(diceNumber);
           (document.getElementsByClassName("_space3d")[0] as any).click()
           setTimeout(async () => {
             if (winnerAddress == (await signer.getAddress())) {
               Modal.success({ title: `Congrats! You won` })
-              setPlayingDice(await contract.playerIsPlaying())
+              setPlayingDice(false)
+              setCurrentPlayersRemaining(6)
+              setWitingForTx(false)
+              setCurrentBetValue(0)
+              setChoice(1)
+              setBet(0)
+              setWinningDice(undefined)
             } else {
               Modal.error({ title: "You didn't choose the right one :(" })
-              setPlayingDice(await contract.playerIsPlaying())
+              setPlayingDice(false)
+              setCurrentPlayersRemaining(6)
+              setWitingForTx(false)
+              setCurrentBetValue(0)
+              setChoice(1)
+              setBet(0)
+              setWinningDice(undefined)
             }
           }, 7000)
         } else {
@@ -123,7 +135,7 @@ export function Dices(props: {
         contract.removeAllListeners()
       }
     }
-  }, [playingDice])
+  }, [playingDiceRef.current])
 
   async function requestAccount() {
     await window.ethereum.request({ method: 'eth_requestAccounts' })
@@ -160,8 +172,9 @@ export function Dices(props: {
       return
     }
 
-    if (diceNumber <= 0 || diceNumber > 7) {
+    if (diceNumber < 1 || diceNumber > 6) {
       Modal.error({ title: 'dice should be between 1 and 6' })
+      return
     }
     if (typeof window.ethereum !== 'undefined') {
       await requestAccount()
@@ -172,6 +185,14 @@ export function Dices(props: {
         CryptoCraps.abi,
         signer,
       )
+
+      const currentBetValue = Number(await contract.currentBetValue());
+      console.log(currentBetValue, bet);
+      if(currentBetValue !== 0 && currentBetValue !== bet)
+      {
+        Modal.error({title: "Some player already set the betting amount for this round. Reload page or wait for page to update"});
+        return;
+      }
       try {
         const transaction = await contract.betNumberSingleDice(
           diceNumber,
@@ -186,13 +207,13 @@ export function Dices(props: {
         Modal.error({
           title: 'Something went wrong. Open console for more information',
         })
-        console.log(e.reason, 'tx:', e.transaction)
+        console.log(e.reason, e.transaction?.hash)
         setPlayingDice(false)
         setWitingForTx(false)
       }
     }
   }
-  console.log(winningDice);
+
   return (
     <div
       style={{

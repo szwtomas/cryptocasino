@@ -85,7 +85,7 @@ function App() {
                         return [4 /*yield*/, contract.balance()];
                     case 2:
                         currentBalance = _a.sent();
-                        setCurrentChipAmount(Number(currentBalance._hex));
+                        setCurrentChipAmount(Number(currentBalance));
                         return [3 /*break*/, 4];
                     case 3:
                         err_1 = _a.sent();

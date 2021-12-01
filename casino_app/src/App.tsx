@@ -43,7 +43,7 @@ function App() {
         const contract = new ethers.Contract(casinoContractAddress, CryptoCasino.abi, signer)
         try {
           const currentBalance = await contract.balance();
-          setCurrentChipAmount(Number(currentBalance._hex));
+          setCurrentChipAmount(Number(currentBalance));
         } catch (err) {
           console.log("Error: ", err)
         }
