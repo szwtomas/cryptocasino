@@ -144,7 +144,7 @@ contract CryptoRoulette is CryptoGame {
                 player.chipsWon
             );
             emit RouletteRolled(rouletteNumber, player.playerAddress, player.chipsWon);
-            delete players[i];
+            //delete players[i];
         }
 
         playersCount = 0;

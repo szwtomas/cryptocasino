@@ -20,7 +20,7 @@ import { FancyButton } from './FancyButton'
 import CryptoRoulette from './artifacts/contracts/CryptoRoulette.sol/CryptoRoulette.json'
 import { RouletteWheel } from './RouletteWheel'
 
-const rouletteContractAddress = '0xa3c15Ff85791E67511bf7e78E310dB1Ba7C01d77'
+const rouletteContractAddress = '0x42aE74D436b45be932825e3bB293003d419D1B4f'
 
 const { Title } = Typography
 
@@ -76,12 +76,12 @@ export function Roulette(props: {
     getRouletteInformation()
   }, [])
 
-  useEffect(() => {
-    if(playingRoulette){
-      console.log('nubmero ruleta ganador', winningRouletteNumber)
-      setRouletteShouldSpin(true);
-    }
-  }, [winningRouletteNumber])
+  // useEffect(() => {
+  //   if(playingRoulette){
+  //     console.log('nubmero ruleta ganador', winningRouletteNumber)
+  //     setRouletteShouldSpin(true);
+  //   }
+  // }, [winningRouletteNumber])
 
   useEffect(() => {
     if (typeof window.ethereum !== 'undefined') {
@@ -95,8 +95,14 @@ export function Roulette(props: {
 
       contract.on('RouletteRolled', async (rouletteNumber, playerAddress, chipsWon) => {
         console.log("Roulette rolled");
-        if (playingRouletteRef.current.valueOf() && playerAddress == await signer.getAddress()) {
+        const provider = new ethers.providers.Web3Provider(window.ethereum)
+        const signer = provider.getSigner()
+        const b = await signer.getAddress()
+        if (playerAddress == b) {
+          console.log("roulette ", rouletteNumber);
           setWinningRouletteNumber(rouletteNumber)
+          setRouletteShouldSpin(true);
+          resetGame();
           setTimeout(async () => {
             if (chipsWon > 0) {
               Modal.success({ title: `Congrats! You got ${chipsWon} 🌕` })
@@ -112,13 +118,7 @@ export function Roulette(props: {
       })
 
       contract.on('PlayerAdded', async (currentPlayers) => {
-        console.log("player added event received. Is playing:", playingRouletteRef.current);
-        if(playingRouletteRef.current){
-          setCurrentPlayersRemaining(2 - currentPlayers);
-          props.updateBalance();
-        } else {
-          setCurrentPlayersRemaining(2 - currentPlayers);
-        }
+          setCurrentPlayersRemaining(2 - Number(currentPlayers._hex));
       })
 
       return () => {
@@ -126,6 +126,16 @@ export function Roulette(props: {
       }
     }
   }, [playingRoulette])
+
+  function resetGame(){
+    setCurrentPlayersRemaining(2);
+    setWitingForTx(false);
+    setNumberBets([]);
+    setColorBets([]);
+    setCurrentIndividualNumberBet(0);
+    setWinningRouletteNumber(1);
+    setRouletteShouldSpin(false);
+  }
 
   async function requestAccount() {
     await window.ethereum.request({ method: 'eth_requestAccounts' })
@@ -180,11 +190,10 @@ export function Roulette(props: {
         {gasLimit: 400000}
       )
       try {
-
+        setplayingRoulette(true)
         setWitingForTx(true);
         await transaction.wait()
         props.updateBalance();
-        setplayingRoulette(true)
         setWitingForTx(false);
       } catch (e: any) {
         Modal.error({
@@ -200,7 +209,7 @@ export function Roulette(props: {
   async function addNumberBet(number: number, bet: number) {
     setNumberBets([...numberBets, { number, bet }])
   }
-
+  console.log(rouletteShouldSpin);
   return (
     <div
       style={{
