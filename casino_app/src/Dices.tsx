@@ -57,7 +57,7 @@ export function Dices(props: {
     _setPlayingDice(playing)
   }
 
-  const setWinningDice = (choice: 1 | 2 | 3 | 4 | 5 | 6) => {
+  const setWinningDice = (choice: 1 | 2 | 3 | 4 | 5 | 6 | undefined) => {
     winningDiceRef.current = choice
     _setWinningDice(choice)
   }
@@ -66,20 +66,10 @@ export function Dices(props: {
     getDiceInformation()
   }, [])
 
-  useEffect(() => {
-    winningDice !== undefined &&
-      window.dispatchEvent(
-        new KeyboardEvent('keypress', {
-          key: 'd',
-        }),
-      )
-      window.dispatchEvent(
-        new KeyboardEvent('keyup', {
-          key: 'd',
-        }),
-      )
-    
-  }, [winningDice])
+  // useEffect(() => {
+  //   console.log(winningDice, winningDiceRef.current);
+  //   winningDiceRef.current !== undefined && (document.getElementsByClassName("_space3d")[0] as any).click()
+  // }, [winningDice, winningDiceRef, winningDiceRef.current])
 
   useEffect(() => {
     if (typeof window.ethereum !== 'undefined') {
@@ -98,7 +88,8 @@ export function Dices(props: {
         )
 
         if (playingDiceRef.current.valueOf()) {
-          setWinningDice(diceNumber)
+          setWinningDice(diceNumber);
+          (document.getElementsByClassName("_space3d")[0] as any).click()
           setTimeout(async () => {
             if (winnerAddress == (await signer.getAddress())) {
               Modal.success({ title: `Congrats! You won` })
@@ -201,7 +192,7 @@ export function Dices(props: {
       }
     }
   }
-
+  console.log(winningDice);
   return (
     <div
       style={{
@@ -224,8 +215,8 @@ export function Dices(props: {
       >
         <Dice
           rollingTime={6000}
-          cheatValue={winningDiceRef.current}
-          triggers={['d']}
+          cheatValue={winningDice}
+          triggers={['click']}
           defaultValue={1}
           size={100}
           faceBg={'#d7d7d7'}
