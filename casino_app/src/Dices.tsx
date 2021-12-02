@@ -70,6 +70,15 @@ export function Dices(props: {
   //   console.log(winningDice, winningDiceRef.current);
   //   winningDiceRef.current !== undefined && (document.getElementsByClassName("_space3d")[0] as any).click()
   // }, [winningDice, winningDiceRef, winningDiceRef.current])
+  function resetGame() {
+    setPlayingDice(false)
+          setCurrentPlayersRemaining(6)
+          setWitingForTx(false)
+          setCurrentBetValue(0)
+          setChoice(1)
+          setBet(0)
+          setWinningDice(undefined)
+  }
 
   useEffect(() => {
     if (typeof window.ethereum !== 'undefined') {
@@ -92,23 +101,9 @@ export function Dices(props: {
           (document.getElementsByClassName("_space3d")[0] as any).click()
           setTimeout(async () => {
             if (winnerAddress == (await signer.getAddress())) {
-              Modal.success({ title: `Congrats! You won` })
-              setPlayingDice(false)
-              setCurrentPlayersRemaining(6)
-              setWitingForTx(false)
-              setCurrentBetValue(0)
-              setChoice(1)
-              setBet(0)
-              setWinningDice(undefined)
+              Modal.success({ title: `Congrats! You won` , onOk: resetGame, cancelButtonProps: { style: {visibility: "hidden"}}})
             } else {
-              Modal.error({ title: "You didn't choose the right one :(" })
-              setPlayingDice(false)
-              setCurrentPlayersRemaining(6)
-              setWitingForTx(false)
-              setCurrentBetValue(0)
-              setChoice(1)
-              setBet(0)
-              setWinningDice(undefined)
+              Modal.error({ title: "You didn't choose the right one :(" , onOk: resetGame, cancelButtonProps: { style: {visibility: "hidden"}}})
             }
           }, 7000)
         } else {

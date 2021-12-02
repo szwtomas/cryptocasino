@@ -31,7 +31,7 @@ export function Roulette(props: {
   updateBalance: () => void
   onGoBack: () => void
 }) {
-  const [currentPlayersRemaining, setCurrentPlayersRemaining] = useState<
+  const [currentPlayersRemaining, _setCurrentPlayersRemaining] = useState<
     number
   >(2)
   const [waitingForTx, setWitingForTx] = useState<boolean>(false)
@@ -40,24 +40,38 @@ export function Roulette(props: {
   const [colorBets, _setColorBets] = useState<ColorBet[]>([])
   const [currentIndividualNumberBet, setCurrentIndividualNumberBet] = useState<
     number
-  >(0)
+  >(1)
 
   const [playingRoulette, _setplayingRoulette] = useState<boolean>(false)
   const [winningRouletteNumber, _setWinningRouletteNumber] = useState<
     number | undefined
   >()
 
-  const [rouletteShouldSpin, setRouletteShouldSpin] = useState<boolean>(false);
+  const [rouletteShouldSpin, _setRouletteShouldSpin] = useState<boolean>(false);
 
   const numberBetsRef = useRef(numberBets)
   const colorBetsRef = useRef(colorBets)
   const playingRouletteRef = useRef(playingRoulette)
   const winningRouletteNumberRef = useRef(winningRouletteNumber)
+  const rouletteShouldSpinRef = useRef(rouletteShouldSpin)
+  const currentPlayersRemainingRef = useRef(currentPlayersRemaining)
+
 
   const setNumberBets = (choice: NumberBet[]) => {
     numberBetsRef.current = choice
     _setNumberBets(choice)
   }
+
+  const setCurrentPlayersRemaining = (choice: number) => {
+    currentPlayersRemainingRef.current = choice;
+    _setCurrentPlayersRemaining(choice)
+  }
+
+  const setRouletteShouldSpin = (val: boolean) => {
+    rouletteShouldSpinRef.current = val
+    _setRouletteShouldSpin(val)
+  }
+
   const setColorBets = (choice: ColorBet[]) => {
     colorBetsRef.current = choice
     _setColorBets(choice)
@@ -76,14 +90,8 @@ export function Roulette(props: {
     getRouletteInformation()
   }, [])
 
-  // useEffect(() => {
-  //   if(playingRoulette){
-  //     console.log('nubmero ruleta ganador', winningRouletteNumber)
-  //     setRouletteShouldSpin(true);
-  //   }
-  // }, [winningRouletteNumber])
-
   useEffect(() => {
+    
     if (typeof window.ethereum !== 'undefined') {
       const provider = new ethers.providers.Web3Provider(window.ethereum)
       const signer = provider.getSigner()
@@ -91,48 +99,53 @@ export function Roulette(props: {
         rouletteContractAddress,
         CryptoRoulette.abi,
         signer,
-      )
-
-      contract.on('RouletteRolled', async (rouletteNumber, playerAddress, chipsWon) => {
-        console.log("Roulette rolled");
-        const provider = new ethers.providers.Web3Provider(window.ethereum)
-        const signer = provider.getSigner()
-        const b = await signer.getAddress()
-        if (playerAddress == b) {
-          console.log("roulette ", rouletteNumber);
-          setWinningRouletteNumber(rouletteNumber)
-          setRouletteShouldSpin(true);
-          resetGame();
-          setTimeout(async () => {
-            if (chipsWon > 0) {
-              Modal.success({ title: `Congrats! You got ${chipsWon} 🌕` })
-              setplayingRoulette(await contract.playerIsPlaying())
-            } else {
-              Modal.error({ title: "So sad... You didn't win anything" })
-              setplayingRoulette(await contract.playerIsPlaying())
-            }
-          }, 12000)
-        } else {
-          winningRouletteNumber !== undefined && getRouletteInformation()
+        )
+        console.log("actualizó is playing roulette")
+        if(playingRouletteRef.current){
+          contract.on('RouletteRolled', async (rouletteNumber, playerAddress, chipsWon) => {
+            console.log("Roulette rolled");
+            const provider = new ethers.providers.Web3Provider(window.ethereum)
+            const signer = provider.getSigner()
+            const b = await signer.getAddress()
+            if (playerAddress === b && !rouletteShouldSpinRef.current) {
+              console.log("roulette ", rouletteNumber, b, playerAddress);
+              setWinningRouletteNumber(rouletteNumber)
+              setRouletteShouldSpin(true);
+              setTimeout(async () => {
+                if (Number(chipsWon) > 0) {
+                  Modal.success({ title: `Congrats! You got ${chipsWon} 🌕` , onOk: resetGame, cancelButtonProps: { style: {visibility: "hidden"}}})
+                } else {
+                  Modal.error({ title: "So sad... You didn't win anything", onOk: resetGame, cancelButtonProps: { style: {visibility: "hidden"}}})
+                }
+              }, 12000)
+            } 
+          })
+          
         }
-      })
+          contract.on('PlayerAdded', async (currentPlayers) => {
+            console.log("setting curr player at player added")
+              setCurrentPlayersRemaining(2 - await contract.playersCount());
+            
+          })
+          
+          return () => {
+            contract.removeAllListeners()
+          }
+        }
+  }, [playingRouletteRef.current])
 
-      contract.on('PlayerAdded', async (currentPlayers) => {
-          setCurrentPlayersRemaining(2 - Number(currentPlayers));
-      })
-
-      return () => {
-        contract.removeAllListeners()
-      }
-    }
-  }, [playingRoulette])
+  useEffect(() => {
+    console.log("curr players remaining", currentPlayersRemaining);
+  }, [currentPlayersRemaining])
 
   function resetGame(){
+    console.log("resetting game");
     setCurrentPlayersRemaining(2);
+    setplayingRoulette(false);
     setWitingForTx(false);
     setNumberBets([]);
     setColorBets([]);
-    setCurrentIndividualNumberBet(0);
+    setCurrentIndividualNumberBet(1);
     setWinningRouletteNumber(1);
     setRouletteShouldSpin(false);
   }
@@ -154,6 +167,7 @@ export function Roulette(props: {
       try {
         const isPLaying = await contract.playerIsPlaying();
         setplayingRoulette(isPLaying)
+        console.log("setting curr player at get reoulettte info")
         setCurrentPlayersRemaining(2 - await contract.playersCount());
         if(isPLaying){
           const {numbBet, colBet} = await contract.getPlayerData();
@@ -187,7 +201,7 @@ export function Roulette(props: {
       const transaction = await contract.addPlayerToRoulette(
         numberBets,
         colorBets,
-        {gasLimit: 400000}
+        {gasLimit: 1000000}
       )
       try {
         setplayingRoulette(true)
@@ -195,6 +209,8 @@ export function Roulette(props: {
         await transaction.wait()
         props.updateBalance();
         setWitingForTx(false);
+        console.log("setting curr player at finish bet")
+        setCurrentPlayersRemaining(2 - await contract.playersCount());
       } catch (e: any) {
         Modal.error({
           title: 'Something went wrong. Open console for more information',
@@ -209,7 +225,7 @@ export function Roulette(props: {
   async function addNumberBet(number: number, bet: number) {
     setNumberBets([...numberBets, { number, bet }])
   }
-  console.log(rouletteShouldSpin);
+
   return (
     <div
       style={{
@@ -231,7 +247,7 @@ export function Roulette(props: {
         
         {'Waiting For transaction to settle... '}<Spin indicator={<LoadingOutlined style={{ fontSize: 24, color: "white" }} spin />}></Spin>
       </Title>}
-     { !waitingForTx && <Title
+     { !waitingForTx && !rouletteShouldSpin && <Title
         style={{
           fontWeight: 800,
           margin: 0,
@@ -254,7 +270,7 @@ export function Roulette(props: {
         {Array.from(Array(37).keys()).map((n) => (
           <Popconfirm
             disabled={playingRoulette}
-            onConfirm={() => addNumberBet(n + 1, currentIndividualNumberBet)}
+            onConfirm={() => addNumberBet(n, currentIndividualNumberBet)}
             color={'black'}
             icon={null}
             overlayInnerStyle={{ borderRadius: 20 }}
@@ -286,14 +302,14 @@ export function Roulette(props: {
                 width: 70,
                 lineHeight: 0.5,
                 backgroundColor: numberBets.some(
-                  (numb) => numb.number === n + 1,
+                  (numb) => numb.number === n,
                 )
                   ? 'red'
                   : playingRoulette
                   ? 'gray'
                   : undefined,
               }}
-              text={(n + 1).toString()}
+              text={(n).toString()}
               onClick={() => null}
             />
           </Popconfirm>
