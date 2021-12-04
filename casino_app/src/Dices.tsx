@@ -196,6 +196,7 @@ export function Dices(props: {
         )
         setPlayingDice(true)
         setWitingForTx(true)
+        props.updateBalance();
         await transaction.wait()
         setWitingForTx(false)
       } catch (e: any) {

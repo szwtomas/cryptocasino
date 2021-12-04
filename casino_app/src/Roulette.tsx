@@ -114,8 +114,10 @@ export function Roulette(props: {
               setTimeout(async () => {
                 if (Number(chipsWon) > 0) {
                   Modal.success({ title: `Congrats! You got ${chipsWon} 🌕` , onOk: resetGame, cancelButtonProps: { style: {visibility: "hidden"}}})
+                  props.updateBalance();
                 } else {
                   Modal.error({ title: "So sad... You didn't win anything", onOk: resetGame, cancelButtonProps: { style: {visibility: "hidden"}}})
+                  props.updateBalance();
                 }
               }, 12000)
             } 
@@ -206,6 +208,7 @@ export function Roulette(props: {
       try {
         setplayingRoulette(true)
         setWitingForTx(true);
+        props.updateBalance();
         await transaction.wait()
         props.updateBalance();
         setWitingForTx(false);
